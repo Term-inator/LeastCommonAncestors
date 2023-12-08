@@ -4,6 +4,7 @@ class LCANaive:
         self.root = root
         self.parent = {root: None}  # Store the parent of each node
         self.build_parent_mapping(root)
+        print(self.parent)
 
     def build_parent_mapping(self, node):
         """ Builds a mapping from each node to its parent. """

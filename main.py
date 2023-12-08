@@ -9,6 +9,7 @@ from lca_bin import LCABinaryLifting
 from lca_tarjan import LCATarjan
 from lca_rmq import LCARMQ
 
+
 def gen_tree(max_depth, max_children):
     """
     :param max_depth: Maximum depth of the tree.
@@ -54,8 +55,8 @@ def gen_test_cases(node_num, num):
     """
     test_cases = []
     while len(test_cases) < num:
-        u = random.randint(node_num//2, node_num)
-        v = random.randint(node_num//2, node_num)
+        u = random.randint(node_num // 2, node_num)
+        v = random.randint(node_num // 2, node_num)
         test_cases.append((u, v))
     return test_cases
 
@@ -104,7 +105,7 @@ def lca_bin(graph, test_cases):
     if lca_mem.get('bin'):
         t1, lca = 0, lca_mem['bin']
     else:
-        t1, lca = timeit(lambda: LCABinaryLifting(1, graph, 100))
+        t1, lca = timeit(lambda: LCABinaryLifting(1, graph))
         lca_mem['bin'] = lca
     t2, r = timeit(lca_test, lca, test_cases)
     return t1, t2, r
@@ -117,7 +118,9 @@ def lca_tarjan(graph, test_cases):
     :return: A list of LCAs.
     """
     t1, lca = timeit(lambda: LCATarjan(graph))
-    t2, r = timeit(lca.lca, test_cases)
+    for u, v in test_cases:
+        lca.add_query(u, v)
+    t2, r = timeit(lca.lca, 1)
     return t1, t2, r
 
 
@@ -138,11 +141,11 @@ def lca_rmq(graph, test_cases):
 
 if __name__ == "__main__":
     tree_graph, node_num = gen_tree(8, 5)
-    # print(tree_graph, node_num)
+    print(tree_graph, node_num)
     print('Tree generated')
     # visualize_tree(tree_graph)
 
-    ns = np.logspace(1, 6, 6, base=10).astype(int)
+    ns = np.logspace(3, 6, 5, base=10).astype(int)
     res = {
         'naive_init': [],
         'naive_query': [],
@@ -155,6 +158,7 @@ if __name__ == "__main__":
     }
 
     for n in ns:
+        print(n)
         test_cases = gen_test_cases(node_num, n)
         print('Test cases generated')
 
@@ -164,11 +168,11 @@ if __name__ == "__main__":
         print('Naive LCA initialization time: ', t1_naive)
         print('Naive LCA query time: ', t2_naive)
 
-        # t1_bin, t2_bin, r_bin = lca_bin(tree_graph, test_cases)
-        # res['bin_init'].append(t1_bin)
-        # res['bin_query'].append(t2_bin)
-        # print('Binary Lifting LCA initialization time: ', t1_bin)
-        # print('Binary Lifting LCA query time: ', t2_bin)
+        t1_bin, t2_bin, r_bin = lca_bin(tree_graph, test_cases)
+        res['bin_init'].append(t1_bin)
+        res['bin_query'].append(t2_bin)
+        print('Binary Lifting LCA initialization time: ', t1_bin)
+        print('Binary Lifting LCA query time: ', t2_bin)
 
         t1_tarjan, t2_tarjan, r_tarjan = lca_tarjan(tree_graph, test_cases)
         res['tarjan_init'].append(t1_tarjan)
@@ -181,23 +185,14 @@ if __name__ == "__main__":
         res['rmq_query'].append(t2_rmq)
         print('RMQ LCA initialization time: ', t1_rmq)
         print('RMQ LCA query time: ', t2_rmq)
+        print()
 
-    plt.plot(ns, res['naive_init'], label='naive_init')
-    plt.plot(ns, res['naive_query'], label='naive_query')
+    plt.plot(ns, res['naive_query'], label='Naive')
+    plt.plot(ns, res['bin_query'], label='Doubling')
+    plt.plot(ns, res['tarjan_query'], label='Tarjan')
+    plt.plot(ns, res['rmq_query'], label='RMQ')
     plt.legend()
-    plt.show()
-
-    # plt.plot(ns, res['bin_init'], label='bin_init')
-    # plt.plot(ns, res['bin_query'], label='bin_query')
-    # plt.legend()
-    # plt.show()
-
-    plt.plot(ns, res['tarjan_init'], label='tarjan_init')
-    plt.plot(ns, res['tarjan_query'], label='tarjan_query')
-    plt.legend()
-    plt.show()
-
-    plt.plot(ns, res['rmq_init'], label='rmq_init')
-    plt.plot(ns, res['rmq_query'], label='rmq_query')
-    plt.legend()
+    plt.xlabel('Number of test cases')
+    plt.ylabel('Time (s)')
+    plt.title('Query time')
     plt.show()
